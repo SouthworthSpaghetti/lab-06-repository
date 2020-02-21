@@ -84,23 +84,23 @@ function weatherHandler(request, response) {
     });
 }
 
-function partyHandler(request, response) {
-  // console.log(request.query);
-  let reqData = request.query;
-  // // let geoData = require('./data/geo.json');
-  const url = `http://api.eventful.com/json/events/search?app_key=${EVENTFUL_API_KEY}&where=${reqData.latitude},${reqData.longitude}&within=25`;
-  console.log(url);
+// function partyHandler(request, response) {
+//   // console.log(request.query);
+//   let reqData = request.query;
+//   // // let geoData = require('./data/geo.json');
+//   const url = `http://api.eventful.com/json/events/search?app_key=${EVENTFUL_API_KEY}&where=${reqData.latitude},${reqData.longitude}&within=25`;
+//   console.log(url);
 
-  superagent.get(url)
-    .then(eventful => {
-      const eventData = JSON.parse(eventful.body);
-      let dataObj = eventData.map(day => new Party(day.events.event[0]));
-      response.send(dataObj);
-    })
-    .catch(() => {
-      // console.error('There was an error', request, response);
-    });
-}
+//   superagent.get(url)
+//     .then(eventful => {
+//       const eventData = JSON.parse(eventful.body);
+//       let dataObj = eventData.map(day => new Party(day.events.event[0]));
+//       response.send(dataObj);
+//     })
+//     .catch(() => {
+//       // console.error('There was an error', request, response);
+//     });
+// }
 
 function hikeHandler(request, response) {
   let reqData = request.query;
