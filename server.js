@@ -9,7 +9,7 @@ require('dotenv').config();
 const cors = require('cors');
 app.use(cors());
 
-let newArr = [];
+// let newArr = [];
 
 const pg = require('pg');//POSTGRES
 const client = new pg.Client(process.env.DATABASE_URL);
@@ -36,24 +36,34 @@ function locationHandler(request, response) {
   // console.log(url);
 
   //if//!check SQL//FEB20
-  // let dataBaseResults = checkDatabase(city);
-  if (!checkDatabase(city)) {//results needs some sort of length check
-    console.log("?>?>?>?>", newArr);
-    console.log("/./././.");
-    superagent.get(url)
-      .then(data => {
-        const geoData = data.body[0];
-        let dataObj = new City(city, geoData);
 
-        response.send(dataObj);
-      })
-      .catch(() => {
-        console.error('There was an error on dataBaseResults');
-      });
-  } else {
-    // console.log("*&*&*&*&", newArr);
-    // response.send(newArr);
-  }
+  let SQL = 'SELECT * FROM city WHERE search_query LIKE ($1) LIMIT 1;';
+  let safeValue = [city];
+  let newArr = [];
+  client.query(SQL, safeValue)
+    .then(results => {
+      console.log(results.rows, SQL);
+      newArr = results.rows;
+      // let dataBaseResults = checkDatabase(city);
+      if (!newArr.length) {//results needs some sort of length check
+        // console.log("?>?>?>?>", newArr);
+        console.log("/./././.");
+        superagent.get(url)
+          .then(data => {
+            const geoData = data.body[0];
+            let dataObj = new City(city, geoData);
+
+            response.send(dataObj);
+          })
+          .catch(() => {
+            console.error('There was an error on dataBaseResults');
+          });
+      } else {
+        console.log("*&*&*&*&", newArr);
+        response.send(newArr[0]);
+      }
+    })
+    .catch((error) => console.error('error: ', error));
 }
 
 function weatherHandler(request, response) {
@@ -70,7 +80,7 @@ function weatherHandler(request, response) {
       response.send(dataObj);
     })
     .catch(() => {
-      console.error('There was an error', request, response);
+      console.error('There was an error upon rendering weather');
     });
 }
 
@@ -173,17 +183,18 @@ app.listen(PORT, () => {
   console.log(`${PORT}`);
 })
 
-let checkDatabase = function (city) {
-  let SQL = 'SELECT * FROM city WHERE search_query LIKE ($1) LIMIT 1;';
-  let safeValue = [city];
-  // const newArr = [];
-  client.query(SQL, safeValue)
-    .then(results => {
-      console.log(results.rows, SQL);
-      newArr.push(results.rows);
-    })
-    .catch()
-    return newArr;
-}
+// let checkDatabase = function (city) {
+//   let SQL = 'SELECT * FROM city WHERE search_query LIKE ($1) LIMIT 1;';
+//   let safeValue = [city];
+//   // let newArr = [];
+//   client.query(SQL, safeValue)
+//     .then(results => {
+//       console.log(results.rows, SQL);
+//       newArr = results.rows;
+//     })
+//     .catch((error) => console.error('error: ', error));
+//     // console.log("99999999", newArr);
+//     return newArr;
+// }
 
 client.connect().then(app.listen(PORT, () => console.log(`listening on ${PORT}`)));
