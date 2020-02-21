@@ -9,6 +9,8 @@ require('dotenv').config();
 const cors = require('cors');
 app.use(cors());
 
+let newArr = [];
+
 const pg = require('pg');//POSTGRES
 const client = new pg.Client(process.env.DATABASE_URL);
 
@@ -35,20 +37,23 @@ function locationHandler(request, response) {
 
   //if//!check SQL//FEB20
   // let dataBaseResults = checkDatabase(city);
-  // console.log("?>?>?>?>", dataBaseResults);
   if (!checkDatabase(city)) {//results needs some sort of length check
+    console.log("?>?>?>?>", newArr);
     console.log("/./././.");
     superagent.get(url)
       .then(data => {
         const geoData = data.body[0];
-        const dataObj = new City(city, geoData);
+        let dataObj = new City(city, geoData);
 
         response.send(dataObj);
       })
       .catch(() => {
         console.error('There was an error on dataBaseResults');
       });
-  } else {response.send(dataBaseResults)};
+  } else {
+    // console.log("*&*&*&*&", newArr);
+    // response.send(newArr);
+  }
 }
 
 function weatherHandler(request, response) {
@@ -61,7 +66,7 @@ function weatherHandler(request, response) {
   superagent.get(url)
     .then(tempData => {
       const weatherData = tempData.body.daily.data;
-      const dataObj = weatherData.map(day => new Sky(day));
+      let dataObj = weatherData.map(day => new Sky(day));
       response.send(dataObj);
     })
     .catch(() => {
@@ -79,7 +84,7 @@ function partyHandler(request, response) {
   superagent.get(url)
     .then(eventful => {
       const eventData = JSON.parse(eventful.body);
-      const dataObj = eventData.map(day => new Party(day.events.event[0]));
+      let dataObj = eventData.map(day => new Party(day.events.event[0]));
       response.send(dataObj);
     })
     .catch(() => {
@@ -93,7 +98,7 @@ function hikeHandler(request, response) {
 
   superagent.get(url)
     .then(hikeful => {
-      const dataObj = hikeful.body.trails.map(trail => new Trail(trail));
+      let dataObj = hikeful.body.trails.map(trail => new Trail(trail));
       response.send(dataObj);
     })
     .catch(() => {
@@ -125,14 +130,14 @@ function City(city, obj) {
   this.formatted_query = obj.display_name;
   this.latitude = obj.lat;
   this.longitude = obj.lon;
-  
+
   this.insertData();
   //save data in database//FEB20 with prototype
 }
 
 City.prototype.insertData = function () {//FEB20 with prototype
   console.log("12345678");
-  let SQL = 'INSERT INTO city (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4)';
+  let SQL = 'INSERT INTO city (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4);';
   let safeValues = [this.search_query, this.formatted_query, this.latitude, this.longitude];
   client.query(SQL, safeValues);
 }
@@ -168,15 +173,17 @@ app.listen(PORT, () => {
   console.log(`${PORT}`);
 })
 
-const checkDatabase = function (city) {
-  let SQL = 'SELECT * FROM city WHERE search_query LIKE ($1)';
+let checkDatabase = function (city) {
+  let SQL = 'SELECT * FROM city WHERE search_query LIKE ($1) LIMIT 1;';
   let safeValue = [city];
+  // const newArr = [];
   client.query(SQL, safeValue)
-  .then(results => {
-    console.log(results.rows.length, SQL);
-      return results.rows;
+    .then(results => {
+      console.log(results.rows, SQL);
+      newArr.push(results.rows);
     })
     .catch()
+    return newArr;
 }
 
 client.connect().then(app.listen(PORT, () => console.log(`listening on ${PORT}`)));
