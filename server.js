@@ -1,13 +1,13 @@
 'use-strict'
+require('dotenv').config();
 
 const express = require('express');
 const app = express();
-const superagent = require('superagent');
-
-require('dotenv').config();
-
 const cors = require('cors');
 app.use(cors());
+
+const superagent = require('superagent');
+
 
 // let newArr = [];
 
