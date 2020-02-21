@@ -24,6 +24,7 @@ const TRAILS_API_KEY = process.env.TRAILS;
 
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
+app.get('/movies', movieHandler);
 // app.get('/events', partyHandler);
 app.get('/trails', hikeHandler);
 // app.get('/location', locationHandler);
@@ -59,7 +60,7 @@ function locationHandler(request, response) {
             console.error('There was an error on dataBaseResults');
           });
       } else {
-        console.log("*&*&*&*&", newArr);
+        // console.log("*&*&*&*&", newArr);
         response.send(newArr[0]);
       }
     })
@@ -81,6 +82,28 @@ function weatherHandler(request, response) {
     })
     .catch(() => {
       console.error('There was an error upon rendering weather');
+    });
+  }
+  
+  function movieHandler(request, response) {
+    // console.log("9898989898", request.query);
+    let reqData = request.query;
+    // // // let geoData = require('./data/geo.json');
+    const url = `https://api.themoviedb.org/3/search/movie?api_key=${THEMOVIEDB_API_KEY}&language=en-US&page=1&include_adult=false&query=${reqData.search_query}`;
+    console.log(url);
+    
+    superagent.get(url)
+    .then(movieObj => {
+      console.log("POPOPOPOP", movieObj.body.results[0]);
+      const movieData = movieObj.body.results[0];
+      let dataObj = [];
+      dataObj.push(new Movie(movieData));
+      console.log('ererere', dataObj)
+      // let dataObj = movieData.map(movie => new Movie(movie));//FEB21
+      response.send(dataObj);
+    })
+    .catch(() => {
+      // console.error('There was an error', request, response);
     });
 }
 
@@ -112,7 +135,7 @@ function hikeHandler(request, response) {
       response.send(dataObj);
     })
     .catch(() => {
-      console.error('error')
+      console.error('error');
     })
 }
 
@@ -146,7 +169,6 @@ function City(city, obj) {
 }
 
 City.prototype.insertData = function () {//FEB20 with prototype
-  console.log("12345678");
   let SQL = 'INSERT INTO city (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4);';
   let safeValues = [this.search_query, this.formatted_query, this.latitude, this.longitude];
   client.query(SQL, safeValues);
@@ -156,6 +178,19 @@ function Sky(obj) {
   // console.log("/./././." + obj.summary);
   this.forecast = obj.summary;
   this.time = new Date(obj.time * 1000).toDateString();
+}
+
+function Movie(obj){
+  this.title = obj.title;
+  this.overview = obj.overview;
+  this.average_votes = obj.vote_average;
+  this.total_votes = obj.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500/${obj.poster_path}`;
+  this.popularity = obj.popularity;
+  this.released_on = obj.release_date;
+  
+  console.log("12345678", this);
+
 }
 
 function Party(obj) {
